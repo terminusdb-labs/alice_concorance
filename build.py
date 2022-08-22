@@ -3,6 +3,8 @@ import re
 import json
 import collections
 from terminusdb_client import Client
+import string
+PUNCTUATION = list(string.punctuation)
 
 client = Client("http://127.0.0.1:6363")
 client.connect()
@@ -21,57 +23,72 @@ def add_schema(client):
                            graph_type="schema")
 
 def add_corpus(client):
-    chapter = re.compile("^CHAPTER.(.*)")
+    chapter_end = re.compile("^CHAPTER.*|^THE END.*")
     chapter_count = 0
     chapter_text = ""
-    with open("corpus/alice.txt",) as corpus:
-        chapters = []
+    term_dict = {}
+    chapters = []
+    paragraphs = []
+    termdfs = []
+    with open("corpus/alice_test.txt",) as corpus:
         for line in corpus:
-            if chapter.match(line):
-                paragraphs = []
+            chapterids = []
+            if chapter_end.match(line):
+                paragraphids = []
+                paragraph_count = 0
                 if(chapter_count > 0):
                     sentences = nltk.sent_tokenize(chapter_text)
                     for sentence in sentences:
                         words = nltk.word_tokenize(sentence)
-                        bgrms = [' '.join(e) for e in nltk.bigrams(words)]
-                        terms = words + bgrms
+                        punctuation_free = [i for i in words if i == '.' or i not in PUNCTUATION]
+                        bgrms = [' '.join(e) for e in nltk.bigrams(punctuation_free)]
+                        terms = words # + bgrms
                         termids = {}
                         for term in terms:
-                            result = list(client.query_document({"@type" : "Term",
-                                                                 "term" : term}))
-                            if result == []:
-                                [termid] = client.insert_document({"@type" : "Term",
-                                                                   "tf" : 1,
-                                                                   "term" : term})
-                                termids[term] = termid
+                            if term not in term_dict:
+                                termid = f".term {term}"
+                                term_dict[term] = {"@type" : "Term",
+                                                   "@capture" : termid,
+                                                   "tf" : 1,
+                                                   "term" : term}
                             else:
-                                [termobj] = result
+                                termobj = term_dict[term]
                                 termobj['tf'] +=1
-                                [termid] = client.replace_document(termobj)
-                                termids[term] = termid
                         counter = collections.Counter(terms)
-                        termdfs = []
+                        paragraph_termdfs = []
                         for term in counter:
+                            df = counter[term]
+                            termid = f".term {term}"
                             termdf = { "@type" : "TermDF",
-                                       "term" : termids[term],
-                                       "df" : counter[term] }
+                                       "term" : { "@ref" : termid },
+                                       "df" : df }
+                            paragraph_termdfs.append(termdf)
                             termdfs.append(termdf)
-                        [paragraphid] = client.insert_document({"@type" : "Paragraph",
-                                                                "text" : sentence,
-                                                                "terms" : termdfs})
-                        paragraphs.append(paragraphid)
-                [chapterid] = client.insert_document({"@type" : "Chapter",
-                                                      "number" : chapter_count,
-                                                      "paragraphs" : paragraphs})
-                chapters.append(chapterid)
+                        paragraphid = f".paragraph {chapter_count} {paragraph_count}"
+                        paragraphs.append({"@type" : "Paragraph",
+                                           "@capture" : paragraphid,
+                                           "text" : sentence,
+                                           "terms" : paragraph_termdfs})
+                        paragraphids.append({"@ref" : paragraphid })
+
+                        paragraph_count += 1
+                    chapterid = f".chapter {chapter_count}"
+                    chapters.append({"@type" : "Chapter",
+                                     "@capture" : chapterid,
+                                     "number" : chapter_count,
+                                     "paragraphs" : paragraphids})
+                    chapterids.append({ "@ref" : chapterid})
                 chapter_count += 1
                 chapter_text = ""
             else:
                 chapter_text += line
-        client.insert_document({"@type" : "Book",
-                                "title" : "Alice in Wonderland",
-                                "number" : chapter_count,
-                                "chapters" : chapters})
+        all_docs = ([{"@type" : "Book",
+                      "title" : "Alice in Wonderland",
+                      "chapters" : chapterids}]
+                    + chapters
+                    + paragraphs
+                    + list(term_dict.values()))
+        client.insert_document(all_docs)
 
 add_schema(client)
 add_corpus(client)

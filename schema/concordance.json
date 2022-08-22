@@ -29,9 +29,8 @@
 
   { "@type" : "Class",
     "@id" : "TermDF",
+    "@key" : { "@type" : "Random" },
     "@subdocument" : [],
-    "@key" : { "@type" : "Lexical",
-               "@fields" : ["term"]},
     "term" : "Term",
     "df" : "xsd:integer" }
 ]
