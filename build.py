@@ -16,7 +16,7 @@ client.create_database("alice",label="Alice in Wonderland",
 def add_schema(client):
     schema = open('schema/concordance.json',)
     schema_objects = json.load(schema)
-    client.insert_document(schema,
+    client.insert_document(schema_objects,
                            graph_type="schema")
 
 def add_corpus(client):

@@ -1,24 +1,32 @@
-{ "@type" : "Class",
-  "@id" : "Book",
-  "chapters" : { "@type" : "Set",
-                 "@class" : "Chapter" }}
+[
+  { "@type" : "Class",
+    "@id" : "Book",
+    "chapters" : { "@type" : "Set",
+                   "@class" : "Chapter" }},
 
-{ "@type" : "Class",
-  "@id" : "Chapter",
-  "paragraphs" : { "@type" : "Set",
-                   "@class" : "Paragraph"}}
+  { "@type" : "Class",
+    "@id" : "Chapter",
+    "title" : "xsd:string",
+    "number" : "xsd:integer",
+    "paragraphs" : { "@type" : "Array",
+                     "@class" : "Paragraph"}},
 
-{ "@type" : "Class",
-  "@id" : "Paragraph",
-  "text" : "xsd:string",
-  "tokenCounts" : { "@type" : "Set",
-                    "@class" : "TokenCount"}}
+  { "@type" : "Class",
+    "@id" : "Paragraph",
+    "text" : "xsd:string",
+    "tokenCounts" : { "@type" : "Set",
+                      "@class" : "TokenIDF"}},
 
-{ "@type" : "Class",
-  "@id" : "TokenCount",
-  "@subdocument" : [],
-  "@key" : { "@type" : "Lexical",
-             "@class" : ["token"]},
-  "token" : "Token",
-  "count" : "xsd:integer" }
+  { "@type" : "Token",
+    "token" : "xsd:string",
+    "tf" : "xsd:intger" },
+
+  { "@type" : "Class",
+    "@id" : "TokenIDF",
+    "@subdocument" : [],
+    "@key" : { "@type" : "Lexical",
+               "@fields" : ["token"]},
+    "token" : "Token",
+    "idf" : "xsd:integer" }
+]
 
