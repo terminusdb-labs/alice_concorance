@@ -1,32 +1,38 @@
 [
   { "@type" : "Class",
     "@id" : "Book",
+    "title" : "xsd:string",
     "chapters" : { "@type" : "Set",
                    "@class" : "Chapter" }},
 
   { "@type" : "Class",
     "@id" : "Chapter",
-    "title" : "xsd:string",
+    "@key" : { "@type" : "Lexical",
+               "@fields" : ["number"]},
     "number" : "xsd:integer",
     "paragraphs" : { "@type" : "Array",
                      "@class" : "Paragraph"}},
 
   { "@type" : "Class",
     "@id" : "Paragraph",
+    "@key" : { "@type" : "Random" },
     "text" : "xsd:string",
-    "tokenCounts" : { "@type" : "Set",
-                      "@class" : "TokenIDF"}},
-
-  { "@type" : "Token",
-    "token" : "xsd:string",
-    "tf" : "xsd:intger" },
+    "terms" : { "@type" : "Set",
+                "@class" : "TermDF"}},
 
   { "@type" : "Class",
-    "@id" : "TokenIDF",
+    "@id" : "Term",
+    "@key" : { "@type" : "Lexical",
+               "@fields" : ["term"]},
+    "term" : "xsd:string",
+    "tf" : "xsd:integer" },
+
+  { "@type" : "Class",
+    "@id" : "TermDF",
     "@subdocument" : [],
     "@key" : { "@type" : "Lexical",
-               "@fields" : ["token"]},
-    "token" : "Token",
-    "idf" : "xsd:integer" }
+               "@fields" : ["term"]},
+    "term" : "Term",
+    "df" : "xsd:integer" }
 ]
 
