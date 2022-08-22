@@ -1,2 +1,24 @@
 { "@type" : "Class",
-  "@id" : "Token",
+  "@id" : "Book",
+  "chapters" : { "@type" : "Set",
+                 "@class" : "Chapter" }}
+
+{ "@type" : "Class",
+  "@id" : "Chapter",
+  "paragraphs" : { "@type" : "Set",
+                   "@class" : "Paragraph"}}
+
+{ "@type" : "Class",
+  "@id" : "Paragraph",
+  "text" : "xsd:string",
+  "tokenCounts" : { "@type" : "Set",
+                    "@class" : "TokenCount"}}
+
+{ "@type" : "Class",
+  "@id" : "TokenCount",
+  "@subdocument" : [],
+  "@key" : { "@type" : "Lexical",
+             "@class" : ["token"]},
+  "token" : "Token",
+  "count" : "xsd:integer" }
+
