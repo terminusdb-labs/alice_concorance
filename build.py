@@ -42,7 +42,7 @@ def add_corpus(client):
                         words = nltk.word_tokenize(sentence)
                         punctuation_free = [i for i in words if i == '.' or i not in PUNCTUATION]
                         bgrms = [' '.join(e) for e in nltk.bigrams(punctuation_free)]
-                        terms = words # + bgrms
+                        terms = words + bgrms
                         termids = {}
                         for term in terms:
                             if term not in term_dict:
