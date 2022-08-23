@@ -5,6 +5,7 @@ import collections
 from terminusdb_client import Client
 import string
 PUNCTUATION = list(string.punctuation)
+COMMON_WORDS = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have']
 
 client = Client("http://127.0.0.1:6363")
 client.connect()
@@ -37,11 +38,14 @@ def add_corpus(client):
                 paragraphids = []
                 paragraph_count = 0
                 if(chapter_count > 0):
-                    sentences = nltk.sent_tokenize(chapter_text)
+                    sentences = nltk.sent_tokenize(chapter_text.lower())
                     for sentence in sentences:
+                        sentence = re.sub('—|‘|“|”|\)|\(',' ',sentence)
+                        sentence = re.sub('\-',' ',sentence)
                         words = nltk.word_tokenize(sentence)
                         punctuation_free = [i for i in words if i == '.' or i not in PUNCTUATION]
-                        bgrms = [' '.join(e) for e in nltk.bigrams(punctuation_free)]
+                        common_word_free = [i for i in punctuation_free if i not in COMMON_WORDS]
+                        bgrms = [' '.join(e) for e in nltk.bigrams(common_word_free)]
                         terms = words + bgrms
                         termids = {}
                         for term in terms:
