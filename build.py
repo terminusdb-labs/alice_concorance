@@ -2,6 +2,7 @@ import nltk
 import re
 import json
 import collections
+import math
 from terminusdb_client import Client, WOQLQuery as Q
 import string
 PUNCTUATION = list(string.punctuation)
@@ -97,7 +98,30 @@ def add_corpus(client):
         client.insert_document(all_docs)
 
 def invert_index(client):
-    query = Q().group_by(
+    tf_query = Q().group_by(
+        ['v:Term'],
+        ['v:DocumentId','v:TermFreq'],
+        'v:Results',
+        (Q().triple('v:TermId',"term",'v:Term') &
+         Q().triple('v:TermFreqId',"term",'v:TermId') &
+         Q().triple('v:TermFreqId',"tf",'v:TermFreq') &
+         Q().triple('v:DocumentId',"terms",'v:TermFreqId')))
+    tf_results = client.query(tf_query)['bindings']
+    term_doc_tf = {}
+    for tf_result in tf_results:
+        doc = {}
+        for [DocId,Tf] in tf_result['Results']:
+            doc[DocId] = Tf['@value']
+        term_doc_tf[tf_result['Term']['@value']] = doc
+
+    df_query = (Q().triple('v:TermId',"term",'v:Term') &
+                Q().triple('v:TermId',"df",'v:DF'))
+    df_results = client.query(df_query)['bindings']
+    doc_df = {}
+    for df_result in df_results:
+        doc_df[df_result['Term']['@value']] = df_result['DF']['@value']
+
+    termdoc_query = Q().group_by(
         ['v:TermDoc'],
         'v:DocumentId',
         'v:DocumentIds',
@@ -105,19 +129,34 @@ def invert_index(client):
          Q().triple('v:TermfreqId','term','v:TermId') &
          Q().triple('v:DocumentId', 'terms', 'v:TermfreqId') &
          Q().read_document('v:TermId','v:TermDoc')))
-    rows = client.query(query)['bindings']
+    rows = client.query(termdoc_query)['bindings']
+
+    n_query = Q().count("v:N").triple('v:_','rdf:type','@schema:Document')
+    n = client.query(n_query)['bindings'][0]['N']['@value']
+
     termobjs = []
     for row in rows:
         termobj = row['TermDoc']
         term_name = termobj['term']
         print(f"term: {term_name}")
-        term_id = termobj['@id']
-        termobj['documents'] = row['DocumentIds']
+
+        docs = row['DocumentIds']
+        tf_idfs = []
+        for doc in docs:
+            tf = term_doc_tf[term_name][doc] if doc in term_doc_tf[term_name] else 0
+            df = doc_df[doc] if doc in doc_df else 0
+            idf = math.log( n / (df + 1))
+            tf_idf = tf * idf
+            tf_idf_obj = { '@type' : 'Document-TF-IDF',
+                           'document' : doc,
+                           'tf_idf' : tf_idf }
+            tf_idfs.append(tf_idf_obj)
+        termobj['documents'] = tf_idfs
         termobjs.append(termobj)
     client.replace_document(termobjs)
 
 client.db = "alice"
-create_db(client)
-add_schema(client)
-add_corpus(client)
+#create_db(client)
+#add_schema(client)
+#add_corpus(client)
 invert_index(client)

@@ -26,7 +26,7 @@
                "@fields" : ["term"]},
     "term" : "xsd:string",
     "documents" : { "@type" : "Set",
-                    "@class" : "Document" },
+                    "@class" : "Document-TF-IDF" },
     "df" : "xsd:integer" },
 
   { "@type" : "Class",
@@ -34,6 +34,13 @@
     "@key" : { "@type" : "Random" },
     "@subdocument" : [],
     "term" : "Term",
-    "tf" : "xsd:integer" }
+    "tf" : "xsd:integer" },
+
+  { "@type" : "Class",
+    "@id" : "Document-TF-IDF",
+    "@key" : { "@type" : "Random" },
+    "@subdocument" : [],
+    "document" : "Document",
+    "tf_idf" : "xsd:decimal" }
 ]
 
