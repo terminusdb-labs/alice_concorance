@@ -10,30 +10,30 @@
     "@key" : { "@type" : "Lexical",
                "@fields" : ["number"]},
     "number" : "xsd:integer",
-    "paragraphs" : { "@type" : "Array",
-                     "@class" : "Paragraph"}},
+    "documents" : { "@type" : "Array",
+                    "@class" : "Document"}},
 
   { "@type" : "Class",
-    "@id" : "Paragraph",
+    "@id" : "Document",
     "@key" : { "@type" : "Random" },
     "text" : "xsd:string",
     "terms" : { "@type" : "Set",
-                "@class" : "TermDF"}},
+                "@class" : "TermFreq"}},
 
   { "@type" : "Class",
     "@id" : "Term",
     "@key" : { "@type" : "Lexical",
                "@fields" : ["term"]},
     "term" : "xsd:string",
-    "paragraphs" : { "@type" : "Set",
-                     "@class" : "Paragraph" },
-    "tf" : "xsd:integer" },
+    "documents" : { "@type" : "Set",
+                    "@class" : "Document" },
+    "df" : "xsd:integer" },
 
   { "@type" : "Class",
-    "@id" : "TermDF",
+    "@id" : "TermFreq",
     "@key" : { "@type" : "Random" },
     "@subdocument" : [],
     "term" : "Term",
-    "df" : "xsd:integer" }
+    "tf" : "xsd:integer" }
 ]
 
