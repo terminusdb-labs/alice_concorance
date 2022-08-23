@@ -2,7 +2,7 @@ import nltk
 import re
 import json
 import collections
-from terminusdb_client import Client
+from terminusdb_client import Client, WOQLQuery as Q
 import string
 PUNCTUATION = list(string.punctuation)
 COMMON_WORDS = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have']
@@ -10,12 +10,13 @@ COMMON_WORDS = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have']
 client = Client("http://127.0.0.1:6363")
 client.connect()
 
-exists = client.get_database("alice")
-if exists:
-    client.delete_database("alice")
+def create_db(client):
+    exists = client.get_database("alice")
+    if exists:
+        client.delete_database("alice")
 
-client.create_database("alice",label="Alice in Wonderland",
-                       description="A concordance for Alice in Wonderland")
+    client.create_database("alice",label="Alice in Wonderland",
+                           description="A concordance for Alice in Wonderland")
 
 def add_schema(client):
     schema = open('schema/concordance.json',)
@@ -40,10 +41,10 @@ def add_corpus(client):
                 if(chapter_count > 0):
                     sentences = nltk.sent_tokenize(chapter_text.lower())
                     for sentence in sentences:
-                        sentence = re.sub('—|‘|“|”|\)|\(',' ',sentence)
+                        sentence = re.sub('=|—|‘|’|“|”|\)|\(',' ',sentence)
                         sentence = re.sub('\-',' ',sentence)
                         words = nltk.word_tokenize(sentence)
-                        punctuation_free = [i for i in words if i == '.' or i not in PUNCTUATION]
+                        punctuation_free = [i for i in words if i not in PUNCTUATION]
                         common_word_free = [i for i in punctuation_free if i not in COMMON_WORDS]
                         bgrms = [' '.join(e) for e in nltk.bigrams(common_word_free)]
                         terms = words + bgrms
@@ -94,5 +95,28 @@ def add_corpus(client):
                     + list(term_dict.values()))
         client.insert_document(all_docs)
 
+def invert_index(client):
+    query = Q().group_by(
+        ['v:TermDoc'],
+        'v:ParagraphId',
+        'v:ParagraphIds',
+        (Q().triple('v:TermId', 'rdf:type', '@schema:Term') &
+         Q().triple('v:TermdfId','term','v:TermId') &
+         Q().triple('v:ParagraphId', 'terms', 'v:TermdfId') &
+         Q().read_document('v:TermId','v:TermDoc')))
+    rows = client.query(query)['bindings']
+    termobjs = []
+    for row in rows:
+        termobj = row['TermDoc']
+        term_name = termobj['term']
+        print(f"term: {term_name}")
+        term_id = termobj['@id']
+        termobj['paragraphs'] = row['ParagraphIds']
+        termobjs.append(termobj)
+    client.replace_document(termobjs)
+
+client.db = "alice"
+create_db(client)
 add_schema(client)
 add_corpus(client)
+invert_index(client)

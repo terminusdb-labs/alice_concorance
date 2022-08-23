@@ -25,6 +25,8 @@
     "@key" : { "@type" : "Lexical",
                "@fields" : ["term"]},
     "term" : "xsd:string",
+    "paragraphs" : { "@type" : "Set",
+                     "@class" : "Paragraph" },
     "tf" : "xsd:integer" },
 
   { "@type" : "Class",
