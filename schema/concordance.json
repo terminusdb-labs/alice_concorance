@@ -10,30 +10,36 @@
     "@key" : { "@type" : "Lexical",
                "@fields" : ["number"]},
     "number" : "xsd:integer",
-    "paragraphs" : { "@type" : "Array",
-                     "@class" : "Paragraph"}},
+    "documents" : { "@type" : "Array",
+                    "@class" : "Document"}},
 
   { "@type" : "Class",
-    "@id" : "Paragraph",
+    "@id" : "Document",
     "@key" : { "@type" : "Random" },
     "text" : "xsd:string",
     "terms" : { "@type" : "Set",
-                "@class" : "TermDF"}},
+                "@class" : "TermCount"}},
 
   { "@type" : "Class",
     "@id" : "Term",
     "@key" : { "@type" : "Lexical",
                "@fields" : ["term"]},
     "term" : "xsd:string",
-    "paragraphs" : { "@type" : "Set",
-                     "@class" : "Paragraph" },
-    "tf" : "xsd:integer" },
+    "documents" : { "@type" : "Set",
+                    "@class" : "Document-TF-IDF" }},
 
   { "@type" : "Class",
-    "@id" : "TermDF",
+    "@id" : "TermCount",
     "@key" : { "@type" : "Random" },
     "@subdocument" : [],
     "term" : "Term",
-    "df" : "xsd:integer" }
-]
+    "count" : "xsd:integer" },
 
+  { "@type" : "Class",
+    "@id" : "Document-TF-IDF",
+    "@key" : { "@type" : "Random" },
+    "@subdocument" : [],
+    "document" : "Document",
+    "tf_idf" : "xsd:decimal" }
+
+]
