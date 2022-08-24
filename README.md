@@ -7,3 +7,10 @@ Adding Alice in Wonderland Concordance
 python -m pip install terminusdb-client
 python -m pip install nltk
 ```
+You also need to get `punkt`
+
+```python
+python
+>> import nltk
+>> nltk.download('punkt')
+```
