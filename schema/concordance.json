@@ -18,7 +18,7 @@
     "@key" : { "@type" : "Random" },
     "text" : "xsd:string",
     "terms" : { "@type" : "Set",
-                "@class" : "TermFreq"}},
+                "@class" : "TermCount"}},
 
   { "@type" : "Class",
     "@id" : "Term",
@@ -26,15 +26,14 @@
                "@fields" : ["term"]},
     "term" : "xsd:string",
     "documents" : { "@type" : "Set",
-                    "@class" : "Document-TF-IDF" },
-    "df" : "xsd:integer" },
+                    "@class" : "Document-TF-IDF" }},
 
   { "@type" : "Class",
-    "@id" : "TermFreq",
+    "@id" : "TermCount",
     "@key" : { "@type" : "Random" },
     "@subdocument" : [],
     "term" : "Term",
-    "tf" : "xsd:integer" },
+    "count" : "xsd:integer" },
 
   { "@type" : "Class",
     "@id" : "Document-TF-IDF",
@@ -42,4 +41,5 @@
     "@subdocument" : [],
     "document" : "Document",
     "tf_idf" : "xsd:decimal" }
+
 ]
