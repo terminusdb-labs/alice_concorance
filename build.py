@@ -9,15 +9,18 @@ PUNCTUATION = list(string.punctuation)
 COMMON_WORDS = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have']
 
 client = Client("http://127.0.0.1:6363")
-client.connect()
+
 
 def create_db(client):
-    exists = client.get_database("alice")
-    if exists:
+    try:
+        client.connect(db="alice")
         client.delete_database("alice")
+    except DatabaseError:
+        pass
 
     client.create_database("alice",label="Alice in Wonderland",
                            description="A concordance for Alice in Wonderland")
+    client.connect(db="alice")
 
 def add_schema(client):
     schema = open('schema/concordance.json',)
@@ -33,7 +36,7 @@ def add_corpus(client):
     chapters = []
     documents = []
     termcounts = []
-    with open("corpus/alice_test.txt",) as corpus:
+    with open("corpus/alice.txt",) as corpus:
         for line in corpus:
             chapterids = []
             if chapter_end.match(line):
