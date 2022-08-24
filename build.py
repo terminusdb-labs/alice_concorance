@@ -3,7 +3,8 @@ import re
 import json
 import collections
 import math
-from terminusdb_client import Client, WOQLQuery as Q
+from terminusdb_client import Client
+import terminusdb_client.query_syntax as w
 import string
 PUNCTUATION = list(string.punctuation)
 COMMON_WORDS = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have']
@@ -101,14 +102,14 @@ def add_corpus(client):
         client.insert_document(all_docs)
 
 def invert_index(client):
-    count_query = Q().group_by(
+    count_query = w.group_by(
         ['v:Term'],
         ['v:DocumentId','v:TermCount'],
         'v:Results',
-        (Q().triple('v:TermId',"term",'v:Term') &
-         Q().triple('v:TermCountId',"term",'v:TermId') &
-         Q().triple('v:TermCountId',"count",'v:TermCount') &
-         Q().triple('v:DocumentId',"terms",'v:TermCountId')))
+        (w.triple('v:TermId',"term",'v:Term') &
+         w.triple('v:TermCountId',"term",'v:TermId') &
+         w.triple('v:TermCountId',"count",'v:TermCount') &
+         w.triple('v:DocumentId',"terms",'v:TermCountId')))
     count_results = client.query(count_query)['bindings']
     term_doc_tf = {}
     for count_result in count_results:
@@ -118,24 +119,25 @@ def invert_index(client):
             doc[DocId] = Count['@value'] / doc_count
         term_doc_tf[count_result['Term']['@value']] = doc
 
-    df_query = (Q().triple('v:TermId',"term",'v:Term') &
-                Q().triple('v:TermId',"df",'v:DF'))
+    df_query = (w.triple('v:TermId',"term",'v:Term') &
+                w.triple('v:TermId',"df",'v:DF'))
     df_results = client.query(df_query)['bindings']
+
     doc_df = {}
     for df_result in df_results:
         doc_df[df_result['Term']['@value']] = df_result['DF']['@value']
 
-    termdoc_query = Q().group_by(
+    termdoc_query = w.group_by(
         ['v:TermDoc'],
         'v:DocumentId',
         'v:DocumentIds',
-        (Q().triple('v:TermId', 'rdf:type', '@schema:Term') &
-         Q().triple('v:TermCountId','term','v:TermId') &
-         Q().triple('v:DocumentId', 'terms', 'v:TermCountId') &
-         Q().read_document('v:TermId','v:TermDoc')))
+        (w.triple('v:TermId', 'rdf:type', '@schema:Term') &
+         w.triple('v:TermCountId','term','v:TermId') &
+         w.triple('v:DocumentId', 'terms', 'v:TermCountId') &
+         w.read_document('v:TermId','v:TermDoc')))
     rows = client.query(termdoc_query)['bindings']
 
-    n_query = Q().count("v:N").triple('v:_','rdf:type','@schema:Document')
+    n_query = w.count("v:N").triple('v:_','rdf:type','@schema:Document')
     n = client.query(n_query)['bindings'][0]['N']['@value']
 
     termobjs = []
@@ -159,8 +161,9 @@ def invert_index(client):
         termobjs.append(termobj)
     client.replace_document(termobjs)
 
-client.db = "alice"
+client.connect()
 create_db(client)
+client.db = "alice"
 add_schema(client)
 add_corpus(client)
 invert_index(client)
