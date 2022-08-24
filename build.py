@@ -33,7 +33,7 @@ def add_corpus(client):
     chapters = []
     documents = []
     termcounts = []
-    with open("corpus/alice_test.txt",) as corpus:
+    with open("corpus/alice.txt",) as corpus:
         for line in corpus:
             chapterids = []
             if chapter_end.match(line):
