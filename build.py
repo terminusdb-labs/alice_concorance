@@ -151,7 +151,7 @@ def invert_index(client):
         tf_idfs = []
         for doc in docs:
             tf = term_doc_tf[term_name][doc] if doc in term_doc_tf[term_name] else 0
-            idf = math.log( n / (df + 1))
+            idf = math.log( 1 + df )
             tf_idf = tf * idf
             tf_idf_obj = { '@type' : 'Document-TF-IDF',
                            'document' : doc,
